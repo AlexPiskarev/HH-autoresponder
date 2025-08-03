@@ -3,6 +3,7 @@
 
 import requests
 import time
+from datetime import datetime
 import config
 
 HEADERS = {
@@ -36,7 +37,7 @@ def is_suitable(vacancy):
         ex.lower() in title for ex in config.EXCLUDE_WORDS
     )
 
-# Шаг 3: отклик на вакансию
+# Шаг 3: отклик на вакансию с логированием
 
 def apply_to_vacancy(vacancy_id, vacancy_title):
     response = requests.post(
@@ -47,10 +48,16 @@ def apply_to_vacancy(vacancy_id, vacancy_title):
             "resume_id": RESUME_ID
         }
     )
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
     if response.status_code == 204:
-        print(f"[✔] Отклик отправлен: {vacancy_title} (ID: {vacancy_id})")
+        log_line = f"{now} | ✔ Отклик на вакансию: {vacancy_title} (ID: {vacancy_id})\n"
+        print(log_line.strip())
     else:
-        print(f"[!] Ошибка отклика на {vacancy_title}: {response.status_code}")
+        log_line = f"{now} | ✖ Ошибка отклика на {vacancy_title} (ID: {vacancy_id}) — {response.status_code}\n"
+        print(log_line.strip())
+
+    with open("applied.log", "a", encoding="utf-8") as f:
+        f.write(log_line)
 
 # Цикл работы
 
