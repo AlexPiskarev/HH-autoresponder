@@ -28,7 +28,7 @@ KEYWORDS = [
 EXCLUDE_WORDS = ["developer", "QA", "инженер", "DevOps"]
 
 # Локация (по желанию)
-LOCATION = "remote"
+LOCATION = "удаленно"
 
 # Текст отклика
 COVER_LETTER = """
