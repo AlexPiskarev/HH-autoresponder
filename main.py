@@ -1,5 +1,5 @@
 # HH-autoresponder: main.py
-# Агент для поиска вакансий и авто-отклика на HH.ru
+# Агент для поиска вакансий и авто-отклика на HH.ru с логированием и ограничением откликов
 
 import requests
 import time
@@ -11,6 +11,7 @@ HEADERS = {
 }
 
 RESUME_ID = "1b343d9cff0f20138a0039ed1f6f676a4a5943"  # ID ИТ-резюме
+MAX_APPLICATIONS_PER_RUN = 5  # Максимум откликов за один запуск цикла
 
 # Шаг 1: поиск вакансий
 
@@ -37,7 +38,7 @@ def is_suitable(vacancy):
 
 # Шаг 3: отклик на вакансию
 
-def apply_to_vacancy(vacancy_id):
+def apply_to_vacancy(vacancy_id, vacancy_title):
     response = requests.post(
         f"{config.HH_API_URL}vacancies/{vacancy_id}/send",
         headers=HEADERS,
@@ -47,20 +48,24 @@ def apply_to_vacancy(vacancy_id):
         }
     )
     if response.status_code == 204:
-        print(f"[✔] Отклик на вакансию {vacancy_id} отправлен")
+        print(f"[✔] Отклик отправлен: {vacancy_title} (ID: {vacancy_id})")
     else:
-        print(f"[!] Ошибка отклика: {response.status_code}")
+        print(f"[!] Ошибка отклика на {vacancy_title}: {response.status_code}")
 
 # Цикл работы
 
 def run_agent():
     while True:
         vacancies = search_vacancies()
+        applied_count = 0
         for v in vacancies:
+            if applied_count >= MAX_APPLICATIONS_PER_RUN:
+                break
             if is_suitable(v):
-                apply_to_vacancy(v["id"])
-        print("--- Ожидание 10 минут ---")
-        time.sleep(600)
+                apply_to_vacancy(v["id"], v["name"])
+                applied_count += 1
+        print(f"--- Ожидание 60 минут (откликов отправлено: {applied_count}) ---")
+        time.sleep(3600)
 
 if __name__ == "__main__":
     run_agent()
