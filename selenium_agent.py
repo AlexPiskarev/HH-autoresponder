@@ -1,4 +1,4 @@
-# selenium_agent.py — альтернатива без API, с авторизацией через браузер и куками
+# selenium_agent.py — авторизация с паролем и обходом нового интерфейса
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -10,13 +10,14 @@ import os
 from datetime import datetime
 import config
 
-HH_LOGIN = "alexpiskarev02@gmail.com"  # твоя почта от HH
-RESUME_ID = "362722d3ff0f3803f80039ed1f6f4f37564456"  # ID резюме
+HH_LOGIN = "alexpiskarev02@gmail.com"
+HH_PASSWORD = "29081989+"
+RESUME_ID = "362722d3ff0f3803f80039ed1f6f4f37564456"
 MAX_APPLICATIONS_PER_RUN = 5
 COOKIES_FILE = "hh_cookies.pkl"
 
 options = Options()
-options.add_argument("-headless")  # Можно отключить, если хочешь видеть браузер
+options.add_argument("-headless")
 
 driver = webdriver.Firefox(options=options)
 driver.implicitly_wait(10)
@@ -30,7 +31,7 @@ def log(text):
 def login():
     driver.get("https://hh.ru/")
 
-    # 1. Попытка загрузить куки
+    # Попытка загрузить cookies
     if os.path.exists(COOKIES_FILE):
         with open(COOKIES_FILE, "rb") as f:
             cookies = pickle.load(f)
@@ -44,25 +45,34 @@ def login():
             log("✅ Сессия восстановлена через куки.")
             return
 
-    # 2. Логин вручную
     log("🔐 Не удалось загрузить сессию. Необходима авторизация.")
-    driver.get("https://hh.ru/account/login")
-    time.sleep(3)
 
+    # Авторизация вручную через интерфейс
     try:
-        email_input = driver.find_element(By.NAME, "username")
-        email_input.send_keys(HH_LOGIN)
-        email_input.send_keys(Keys.ENTER)
-
-        log("📨 Введи одноразовый код из почты вручную в браузере.")
-        input("▶ Нажми Enter, когда код введён и ты авторизован...")
+        driver.get("https://hh.ru/")
+        time.sleep(2)
+        driver.find_element(By.XPATH, "//button[text()='Войти']").click()
+        time.sleep(2)
+        driver.find_element(By.XPATH, "//div[contains(text(), 'Я ищу работу')]").click()
+        time.sleep(1)
+        driver.find_element(By.XPATH, "//button[text()='Войти']").click()
+        time.sleep(2)
+        driver.find_element(By.XPATH, "//input[@type='email']").send_keys(HH_LOGIN)
+        driver.find_element(By.XPATH, "//button[text()='Дальше']").click()
+        time.sleep(2)
+        driver.find_element(By.XPATH, "//button[contains(text(),'Войти с паролем')]").click()
+        time.sleep(2)
+        password_input = driver.find_element(By.XPATH, "//input[@type='password']")
+        password_input.send_keys(HH_PASSWORD)
+        password_input.send_keys(Keys.ENTER)
+        time.sleep(5)
 
         with open(COOKIES_FILE, "wb") as f:
             pickle.dump(driver.get_cookies(), f)
 
-        log("💾 Куки сохранены.")
+        log("💾 Куки сохранены после авторизации.")
     except Exception as e:
-        log(f"⚠️ Не удалось найти форму логина: {e}")
+        log(f"⚠️ Ошибка при логине: {e}")
         log("⏭ Пропускаем авторизацию, возможно, сессия уже активна.")
 
 def search_and_apply():
