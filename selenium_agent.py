@@ -49,17 +49,21 @@ def login():
     driver.get("https://hh.ru/account/login")
     time.sleep(3)
 
-    email_input = driver.find_element(By.NAME, "username")
-    email_input.send_keys(HH_LOGIN)
-    email_input.send_keys(Keys.ENTER)
+    try:
+        email_input = driver.find_element(By.NAME, "username")
+        email_input.send_keys(HH_LOGIN)
+        email_input.send_keys(Keys.ENTER)
 
-    log("📨 Введи одноразовый код из почты вручную в браузере.")
-    input("▶ Нажми Enter, когда код введён и ты авторизован...")
+        log("📨 Введи одноразовый код из почты вручную в браузере.")
+        input("▶ Нажми Enter, когда код введён и ты авторизован...")
 
-    with open(COOKIES_FILE, "wb") as f:
-        pickle.dump(driver.get_cookies(), f)
+        with open(COOKIES_FILE, "wb") as f:
+            pickle.dump(driver.get_cookies(), f)
 
-    log("💾 Куки сохранены.")
+        log("💾 Куки сохранены.")
+    except Exception as e:
+        log(f"⚠️ Не удалось найти форму логина: {e}")
+        log("⏭ Пропускаем авторизацию, возможно, сессия уже активна.")
 
 def search_and_apply():
     driver.get("https://hh.ru/search/vacancy?area=1&text=" + "+".join(config.KEYWORDS))
@@ -100,8 +104,5 @@ def search_and_apply():
 
 if __name__ == "__main__":
     login()
-    search_and_apply()
-    driver.quit()
-
     search_and_apply()
     driver.quit()
