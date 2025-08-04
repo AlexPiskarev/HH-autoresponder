@@ -17,7 +17,6 @@ MAX_APPLICATIONS_PER_RUN = 5
 COOKIES_FILE = "hh_cookies.pkl"
 
 options = Options()
-options.add_argument("-headless")
 
 driver = webdriver.Firefox(options=options)
 driver.implicitly_wait(10)
@@ -51,11 +50,11 @@ def login():
     try:
         driver.get("https://hh.ru/")
         time.sleep(2)
-        driver.find_element(By.XPATH, "//*[text()='Войти']").click()
+        driver.find_element(By.XPATH, "//a[text()='Войти']").click()
         time.sleep(2)
         driver.find_element(By.XPATH, "//div[contains(text(), 'Я ищу работу')]").click()
         time.sleep(1)
-        driver.find_element(By.XPATH, "//*[text()='Войти']").click()
+        driver.find_element(By.XPATH, "//a[text()='Войти']").click()
         time.sleep(2)
         driver.find_element(By.XPATH, "//input[@type='email']").send_keys(HH_LOGIN)
         driver.find_element(By.XPATH, "//button[text()='Дальше']").click()
