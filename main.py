@@ -11,7 +11,7 @@ HEADERS = {
     "Authorization": f"Bearer {config.HH_ACCESS_TOKEN}"
 }
 
-RESUME_ID = "1b343d9cff0f20138a0039ed1f6f676a4a5943"  # ID ИТ-резюме
+RESUME_ID = "362722d3ff0f3803f80039ed1f6f4f37564456"  # ID ИТ-резюме
 MAX_APPLICATIONS_PER_RUN = 5  # Максимум откликов за один запуск цикла
 
 # Шаг 1: поиск вакансий
