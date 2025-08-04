@@ -39,7 +39,7 @@ def login():
                     del cookie["expiry"]
                 driver.add_cookie(cookie)
         driver.refresh()
-        time.sleep(3)
+        time.sleep(4)
         if "account" in driver.page_source or "Выход" in driver.page_source:
             log("✅ Сессия восстановлена через куки.")
             return
