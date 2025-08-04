@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 import config
 
-HH_LOGIN = "alexpiskarev@yandex.ru"  # твоя почта от HH
+HH_LOGIN = "alexpiskarev02@gmail.com"  # твоя почта от HH
 RESUME_ID = "1b343d9cff0f20138a0039ed1f6f676a4a5943"  # ID резюме
 MAX_APPLICATIONS_PER_RUN = 5
 COOKIES_FILE = "hh_cookies.pkl"
@@ -100,5 +100,8 @@ def search_and_apply():
 
 if __name__ == "__main__":
     login()
+    search_and_apply()
+    driver.quit()
+
     search_and_apply()
     driver.quit()
