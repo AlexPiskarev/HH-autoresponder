@@ -3,7 +3,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
@@ -19,9 +19,12 @@ MAX_APPLICATIONS_PER_RUN = 15
 COOKIES_FILE = "hh_cookies.pkl"
 
 options = Options()
-# options.add_argument("-headless")  # Отключаем headless для ручного ввода
+# options.add_argument("--headless")  # Отключаем headless для ручного ввода
+options.add_experimental_option("detach", True)  # не закрывать окно после завершения
 
-driver = webdriver.Firefox(options=options)
+# путь до драйвера Chrome, если не прописан в PATH
+# driver = webdriver.Chrome(executable_path="/path/to/chromedriver", options=options)
+driver = webdriver.Chrome(options=options)
 driver.implicitly_wait(10)
 
 def log(text):
@@ -57,7 +60,12 @@ def login():
         driver.find_element(By.XPATH, "//button[text()='Дальше']").click()
         WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(),'Войти с паролем')]"))).click()
         WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.XPATH, "//input[@type='password']"))).send_keys(HH_PASSWORD + Keys.ENTER)
-        time.sleep(10)
+
+        # Ожидание авторизации (появления кнопки "Выход")
+        WebDriverWait(driver, 180).until(
+            EC.presence_of_element_located((By.XPATH, "//a[contains(@href, '/logout')]"))
+        )
+
         with open(COOKIES_FILE, "wb") as f:
             pickle.dump(driver.get_cookies(), f)
         log("💾 Куки сохранены после авторизации.")
@@ -73,7 +81,11 @@ def search_and_apply():
         page = 0
         while True:
             search_url = f"https://hh.ru/search/vacancy?text={keyword}&search_period=1&schedule=remote&page={page}"
-            driver.get(search_url)
+            try:
+                driver.get(search_url)
+            except Exception as e:
+                log(f"❌ Ошибка перехода по адресу: {search_url} — {e}")
+                break
 
             try:
                 WebDriverWait(driver, 10).until(
