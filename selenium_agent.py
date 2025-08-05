@@ -4,6 +4,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 import pickle
 import os
@@ -29,7 +31,7 @@ def log(text):
         f.write(f"[{now}] {text}\n")
 
 def login():
-    driver.get("https://hh.ru/account/login")
+    driver.get("https://hh.ru/")
 
     if os.path.exists(COOKIES_FILE):
         with open(COOKIES_FILE, "rb") as f:
@@ -41,36 +43,23 @@ def login():
                     driver.add_cookie(cookie)
                 except Exception as e:
                     log(f"⚠️ Не удалось добавить куки: {e}")
-        driver.get("https://hh.ru/")
-        time.sleep(3)
-        if "account" in driver.page_source or "Выход" in driver.page_source:
+        driver.refresh()
+        time.sleep(5)
+        if "Выход" in driver.page_source:
             log("✅ Сессия восстановлена через куки.")
             return
 
     log("🔐 Не удалось загрузить сессию. Необходима авторизация.")
 
     try:
-        driver.get("https://hh.ru/")
-        time.sleep(60)
-        driver.find_element(By.XPATH, "//button[text()='Войти']").click()
-        time.sleep(60)
-        driver.find_element(By.XPATH, "//div[contains(text(), 'Я ищу работу')]").click()
-        time.sleep(60)
-        driver.find_element(By.XPATH, "//button[text()='Войти']").click()
-        time.sleep(60)
-        driver.find_element(By.XPATH, "//input[@type='email']").send_keys(HH_LOGIN)
+        driver.get("https://hh.ru/account/login")
+        WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.XPATH, "//input[@type='email']"))).send_keys(HH_LOGIN)
         driver.find_element(By.XPATH, "//button[text()='Дальше']").click()
-        time.sleep(60)
-        driver.find_element(By.XPATH, "//button[contains(text(),'Войти с паролем')]").click()
-        time.sleep(60)
-        password_input = driver.find_element(By.XPATH, "//input[@type='password']")
-        password_input.send_keys(HH_PASSWORD)
-        password_input.send_keys(Keys.ENTER)
-        time.sleep(60)
-
+        WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(),'Войти с паролем')]"))).click()
+        WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.XPATH, "//input[@type='password']"))).send_keys(HH_PASSWORD + Keys.ENTER)
+        time.sleep(10)
         with open(COOKIES_FILE, "wb") as f:
             pickle.dump(driver.get_cookies(), f)
-
         log("💾 Куки сохранены после авторизации.")
     except Exception as e:
         log(f"⚠️ Ошибка при логине: {e}")
@@ -85,13 +74,18 @@ def search_and_apply():
         while True:
             search_url = f"https://hh.ru/search/vacancy?text={keyword}&search_period=1&schedule=remote&page={page}"
             driver.get(search_url)
-            time.sleep(5)
 
-            vacancies = driver.find_elements(By.CSS_SELECTOR, "div[data-qa='serp-item']")
-
-            if not vacancies:
+            try:
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-qa='serp-item']"))
+                )
+            except:
                 if page == 0:
                     log(f"❌ Вакансии не найдены по запросу: {keyword}")
+                break
+
+            vacancies = driver.find_elements(By.CSS_SELECTOR, "div[data-qa='serp-item']")
+            if not vacancies:
                 break
 
             for vacancy in vacancies:
