@@ -80,7 +80,7 @@ def search_and_apply():
     count = 0
 
     for keyword in config.KEYWORDS:
-        search_url = f"https://hh.ru/search/vacancy?area=1&text={keyword}"
+        search_url = f"https://hh.ru/search/vacancy?text={keyword}&search_period=1&schedule=remote"
         driver.get(search_url)
         time.sleep(3)
 
