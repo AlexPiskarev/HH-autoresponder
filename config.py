@@ -12,7 +12,6 @@ KEYWORDS = [
     "operations manager",
     "бизнес-аналитик",
     "business analyst",
-    "системный аналитик",
     "project manager",
     "IT project manager",
     "product operations",
