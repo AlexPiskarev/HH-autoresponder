@@ -12,11 +12,12 @@ import config
 
 HH_LOGIN = "alexpiskarev02@gmail.com"
 HH_PASSWORD = "29081989+"
-RESUME_ID = "362722d3ff0f3803f80039ed1f6f4f37564456"
+RESUME_ID = "e13c4571ff0f38e6c40039ed1f484e694e366f"
 MAX_APPLICATIONS_PER_RUN = 5
 COOKIES_FILE = "hh_cookies.pkl"
 
 options = Options()
+# options.add_argument("-headless")  # Отключаем headless для ручного ввода
 
 driver = webdriver.Firefox(options=options)
 driver.implicitly_wait(10)
@@ -39,7 +40,7 @@ def login():
                     del cookie["expiry"]
                 driver.add_cookie(cookie)
         driver.refresh()
-        time.sleep(4)
+        time.sleep(3)
         if "account" in driver.page_source or "Выход" in driver.page_source:
             log("✅ Сессия восстановлена через куки.")
             return
@@ -49,22 +50,22 @@ def login():
     # Авторизация вручную через интерфейс
     try:
         driver.get("https://hh.ru/")
-        time.sleep(2)
-        driver.find_element(By.XPATH, "//a[text()='Войти']").click()
-        time.sleep(2)
+        time.sleep(20)
+        driver.find_element(By.XPATH, "//button[text()='Войти']").click()
+        time.sleep(20)
         driver.find_element(By.XPATH, "//div[contains(text(), 'Я ищу работу')]").click()
-        time.sleep(1)
-        driver.find_element(By.XPATH, "//a[text()='Войти']").click()
-        time.sleep(2)
+        time.sleep(20)
+        driver.find_element(By.XPATH, "//button[text()='Войти']").click()
+        time.sleep(30)
         driver.find_element(By.XPATH, "//input[@type='email']").send_keys(HH_LOGIN)
         driver.find_element(By.XPATH, "//button[text()='Дальше']").click()
-        time.sleep(2)
+        time.sleep(30)
         driver.find_element(By.XPATH, "//button[contains(text(),'Войти с паролем')]").click()
-        time.sleep(2)
+        time.sleep(30)
         password_input = driver.find_element(By.XPATH, "//input[@type='password']")
         password_input.send_keys(HH_PASSWORD)
         password_input.send_keys(Keys.ENTER)
-        time.sleep(5)
+        time.sleep(40)
 
         with open(COOKIES_FILE, "wb") as f:
             pickle.dump(driver.get_cookies(), f)
