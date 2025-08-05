@@ -59,13 +59,13 @@ def login():
         time.sleep(30)
         driver.find_element(By.XPATH, "//input[@type='email']").send_keys(HH_LOGIN)
         driver.find_element(By.XPATH, "//button[text()='Дальше']").click()
-        time.sleep(30)
+        time.sleep(60)
         driver.find_element(By.XPATH, "//button[contains(text(),'Войти с паролем')]").click()
-        time.sleep(30)
+        time.sleep(60)
         password_input = driver.find_element(By.XPATH, "//input[@type='password']")
         password_input.send_keys(HH_PASSWORD)
         password_input.send_keys(Keys.ENTER)
-        time.sleep(40)
+        time.sleep(60)
 
         with open(COOKIES_FILE, "wb") as f:
             pickle.dump(driver.get_cookies(), f)
