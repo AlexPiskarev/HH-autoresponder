@@ -19,8 +19,6 @@ KEYWORDS = [
     "автоматизация бизнес-процессов",
     "lead generation",
     "cold outreach",
-    "SDR",
-    "outbound-маркетинг",
     "LinkedIn маркетинг"
 ]
 # Исключаем технические / нецелевые роли
