@@ -65,7 +65,7 @@ def login():
         password_input = driver.find_element(By.XPATH, "//input[@type='password']")
         password_input.send_keys(HH_PASSWORD)
         password_input.send_keys(Keys.ENTER)
-        time.sleep(70)
+        time.sleep(60)
 
         with open(COOKIES_FILE, "wb") as f:
             pickle.dump(driver.get_cookies(), f)
@@ -76,6 +76,7 @@ def login():
         log("⏭ Пропускаем авторизацию, возможно, сессия уже активна.")
 
 def search_and_apply():
+    log("🔎 Начинаем поиск и отклик на вакансии...")
     driver.get("https://hh.ru/search/vacancy?area=1&text=" + "+".join(config.KEYWORDS))
     time.sleep(3)
 
