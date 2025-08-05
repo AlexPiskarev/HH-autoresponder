@@ -31,7 +31,6 @@ def log(text):
 def login():
     driver.get("https://hh.ru/")
 
-    # Попытка загрузить cookies
     if os.path.exists(COOKIES_FILE):
         with open(COOKIES_FILE, "rb") as f:
             cookies = pickle.load(f)
@@ -47,7 +46,6 @@ def login():
 
     log("🔐 Не удалось загрузить сессию. Необходима авторизация.")
 
-    # Авторизация вручную через интерфейс
     try:
         driver.get("https://hh.ru/")
         time.sleep(60)
@@ -82,34 +80,40 @@ def search_and_apply():
     for keyword in config.KEYWORDS:
         search_url = f"https://hh.ru/search/vacancy?text={keyword}&search_period=1&schedule=remote"
         driver.get(search_url)
-        time.sleep(3)
+        time.sleep(5)
 
-        vacancies = driver.find_elements(By.CSS_SELECTOR, "div.vacancy-serp-item")
-        
+        vacancies = driver.find_elements(By.CSS_SELECTOR, "div[data-qa='serp-item']")
+
+        if not vacancies:
+            log(f"❌ Вакансии не найдены по запросу: {keyword}")
+            continue
+
         for vacancy in vacancies:
-            title_el = vacancy.find_element(By.CSS_SELECTOR, "a.bloko-link")
-            title = title_el.text.lower()
-
-            if any(x.lower() in title for x in config.EXCLUDE_WORDS):
-                continue
-
             try:
+                title_el = vacancy.find_element(By.CSS_SELECTOR, "a.bloko-link")
+                title = title_el.text.lower()
+
+                if any(x.lower() in title for x in config.EXCLUDE_WORDS):
+                    continue
+
                 title_el.click()
                 driver.switch_to.window(driver.window_handles[-1])
-                time.sleep(3)
+                time.sleep(5)
 
                 apply_btn = driver.find_element(By.CSS_SELECTOR, "button[data-qa='vacancy-response-button-top']")
                 apply_btn.click()
-                time.sleep(2)
+                time.sleep(3)
 
                 log(f"✔ Отклик на вакансию: {title_el.text}")
                 count += 1
                 driver.close()
                 driver.switch_to.window(driver.window_handles[0])
+
                 if count >= MAX_APPLICATIONS_PER_RUN:
                     return
+
             except Exception as e:
-                log(f"✖ Не удалось откликнуться: {title_el.text} — {str(e)}")
+                log(f"✖ Не удалось откликнуться: {title_el.text if 'title_el' in locals() else '[no title]'} — {str(e)}")
                 if len(driver.window_handles) > 1:
                     driver.close()
                     driver.switch_to.window(driver.window_handles[0])
