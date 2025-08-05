@@ -13,7 +13,7 @@ import config
 HH_LOGIN = "alexpiskarev02@gmail.com"
 HH_PASSWORD = "29081989+"
 RESUME_ID = "e13c4571ff0f38e6c40039ed1f484e694e366f"
-MAX_APPLICATIONS_PER_RUN = 5
+MAX_APPLICATIONS_PER_RUN = 15
 COOKIES_FILE = "hh_cookies.pkl"
 
 options = Options()
@@ -29,7 +29,7 @@ def log(text):
         f.write(f"[{now}] {text}\n")
 
 def login():
-    driver.get("https://hh.ru/")
+    driver.get("https://hh.ru/account/login")
 
     if os.path.exists(COOKIES_FILE):
         with open(COOKIES_FILE, "rb") as f:
@@ -37,8 +37,11 @@ def login():
             for cookie in cookies:
                 if "expiry" in cookie:
                     del cookie["expiry"]
-                driver.add_cookie(cookie)
-        driver.refresh()
+                try:
+                    driver.add_cookie(cookie)
+                except Exception as e:
+                    log(f"⚠️ Не удалось добавить куки: {e}")
+        driver.get("https://hh.ru/")
         time.sleep(3)
         if "account" in driver.page_source or "Выход" in driver.page_source:
             log("✅ Сессия восстановлена через куки.")
@@ -78,45 +81,51 @@ def search_and_apply():
     count = 0
 
     for keyword in config.KEYWORDS:
-        search_url = f"https://hh.ru/search/vacancy?text={keyword}&search_period=1&schedule=remote"
-        driver.get(search_url)
-        time.sleep(5)
+        page = 0
+        while True:
+            search_url = f"https://hh.ru/search/vacancy?text={keyword}&search_period=1&schedule=remote&page={page}"
+            driver.get(search_url)
+            time.sleep(5)
 
-        vacancies = driver.find_elements(By.CSS_SELECTOR, "div[data-qa='serp-item']")
+            vacancies = driver.find_elements(By.CSS_SELECTOR, "div[data-qa='serp-item']")
 
-        if not vacancies:
-            log(f"❌ Вакансии не найдены по запросу: {keyword}")
-            continue
+            if not vacancies:
+                if page == 0:
+                    log(f"❌ Вакансии не найдены по запросу: {keyword}")
+                break
 
-        for vacancy in vacancies:
-            try:
-                title_el = vacancy.find_element(By.CSS_SELECTOR, "a.bloko-link")
-                title = title_el.text.lower()
+            for vacancy in vacancies:
+                try:
+                    title_el = vacancy.find_element(By.CSS_SELECTOR, "a.bloko-link")
+                    title = title_el.text.lower()
 
-                if any(x.lower() in title for x in config.EXCLUDE_WORDS):
-                    continue
+                    if any(x.lower() in title for x in config.EXCLUDE_WORDS):
+                        continue
 
-                title_el.click()
-                driver.switch_to.window(driver.window_handles[-1])
-                time.sleep(5)
+                    driver.execute_script("arguments[0].scrollIntoView(true);", title_el)
+                    title_el.click()
+                    driver.switch_to.window(driver.window_handles[-1])
+                    time.sleep(5)
 
-                apply_btn = driver.find_element(By.CSS_SELECTOR, "button[data-qa='vacancy-response-button-top']")
-                apply_btn.click()
-                time.sleep(3)
+                    apply_btn = driver.find_element(By.CSS_SELECTOR, "button[data-qa='vacancy-response-button-top']")
+                    apply_btn.click()
+                    time.sleep(3)
 
-                log(f"✔ Отклик на вакансию: {title_el.text}")
-                count += 1
-                driver.close()
-                driver.switch_to.window(driver.window_handles[0])
-
-                if count >= MAX_APPLICATIONS_PER_RUN:
-                    return
-
-            except Exception as e:
-                log(f"✖ Не удалось откликнуться: {title_el.text if 'title_el' in locals() else '[no title]'} — {str(e)}")
-                if len(driver.window_handles) > 1:
+                    log(f"✔ Отклик на вакансию: {title_el.text}")
+                    count += 1
                     driver.close()
                     driver.switch_to.window(driver.window_handles[0])
+
+                    if count >= MAX_APPLICATIONS_PER_RUN:
+                        return
+
+                except Exception as e:
+                    log(f"✖ Не удалось откликнуться: {title_el.text if 'title_el' in locals() else '[no title]'} — {str(e)}")
+                    if len(driver.window_handles) > 1:
+                        driver.close()
+                        driver.switch_to.window(driver.window_handles[0])
+
+            page += 1
 
 if __name__ == "__main__":
     login()
