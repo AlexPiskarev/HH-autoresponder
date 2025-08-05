@@ -80,7 +80,7 @@ def search_and_apply():
     for keyword in config.KEYWORDS:
         page = 0
         while True:
-            search_url = f"https://hh.ru/search/vacancy?text={keyword}&search_period=1&schedule=remote&page={page}"
+            search_url = f"https://hh.ru/search/vacancy?text={keyword}&search_period=1&schedule=remote&area=&page={page}"
             try:
                 driver.get(search_url)
             except Exception as e:
