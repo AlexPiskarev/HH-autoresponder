@@ -77,41 +77,42 @@ def login():
 
 def search_and_apply():
     log("🔎 Начинаем поиск и отклик на вакансии...")
-    driver.get("https://hh.ru/search/vacancy?area=1&text=" + "+".join(config.KEYWORDS))
-    time.sleep(3)
-
-    vacancies = driver.find_elements(By.CSS_SELECTOR, "div.vacancy-serp-item")
     count = 0
 
-    for vacancy in vacancies:
-        title_el = vacancy.find_element(By.CSS_SELECTOR, "a.bloko-link")
-        title = title_el.text.lower()
+    for keyword in config.KEYWORDS:
+        search_url = f"https://hh.ru/search/vacancy?area=1&text={keyword}"
+        driver.get(search_url)
+        time.sleep(3)
 
-        if any(x.lower() in title for x in config.EXCLUDE_WORDS):
-            continue
-        if not all(x.lower() in title for x in config.KEYWORDS):
-            continue
+        vacancies = driver.find_elements(By.CSS_SELECTOR, "div.vacancy-serp-item")
+        
+        for vacancy in vacancies:
+            title_el = vacancy.find_element(By.CSS_SELECTOR, "a.bloko-link")
+            title = title_el.text.lower()
 
-        try:
-            title_el.click()
-            driver.switch_to.window(driver.window_handles[-1])
-            time.sleep(3)
+            if any(x.lower() in title for x in config.EXCLUDE_WORDS):
+                continue
 
-            apply_btn = driver.find_element(By.CSS_SELECTOR, "button[data-qa='vacancy-response-button-top']")
-            apply_btn.click()
-            time.sleep(2)
+            try:
+                title_el.click()
+                driver.switch_to.window(driver.window_handles[-1])
+                time.sleep(3)
 
-            log(f"✔ Отклик на вакансию: {title_el.text}")
-            count += 1
-            driver.close()
-            driver.switch_to.window(driver.window_handles[0])
-            if count >= MAX_APPLICATIONS_PER_RUN:
-                break
-        except Exception as e:
-            log(f"✖ Не удалось откликнуться: {title_el.text} — {str(e)}")
-            if len(driver.window_handles) > 1:
+                apply_btn = driver.find_element(By.CSS_SELECTOR, "button[data-qa='vacancy-response-button-top']")
+                apply_btn.click()
+                time.sleep(2)
+
+                log(f"✔ Отклик на вакансию: {title_el.text}")
+                count += 1
                 driver.close()
                 driver.switch_to.window(driver.window_handles[0])
+                if count >= MAX_APPLICATIONS_PER_RUN:
+                    return
+            except Exception as e:
+                log(f"✖ Не удалось откликнуться: {title_el.text} — {str(e)}")
+                if len(driver.window_handles) > 1:
+                    driver.close()
+                    driver.switch_to.window(driver.window_handles[0])
 
 if __name__ == "__main__":
     login()
